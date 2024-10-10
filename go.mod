@@ -1,4 +1,4 @@
-module singo
+module ginorm
 
 go 1.22.1
 

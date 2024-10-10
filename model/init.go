@@ -1,9 +1,9 @@
 package model
 
 import (
+	"ginorm/util"
 	"log"
 	"os"
-	"singo/util"
 	"time"
 
 	"gorm.io/driver/mysql"

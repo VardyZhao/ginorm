@@ -1,9 +1,9 @@
-package server
+package router
 
 import (
+	"ginorm/controller/api"
+	"ginorm/middleware"
 	"os"
-	"singo/api"
-	"singo/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +18,7 @@ func NewRouter() *gin.Engine {
 	r.Use(middleware.CurrentUser())
 
 	// 路由
-	v1 := r.Group("/api/v1")
+	v1 := r.Group("/controller/v1")
 	{
 		v1.POST("ping", api.Ping)
 

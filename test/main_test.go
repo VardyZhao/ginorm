@@ -1,8 +1,8 @@
 package test
 
 import (
+	"ginorm/util"
 	"net/http"
-	"singo/util"
 	"testing"
 
 	"github.com/gavv/httpexpect"
@@ -28,7 +28,7 @@ func getHttpExpect(t *testing.T) *httpexpect.Expect {
 func TestQngUserLogin(t *testing.T) {
 	e := getHttpExpect(t)
 
-	obj := e.POST("/api/v1/ping").
+	obj := e.POST("/controller/v1/ping").
 		Expect().
 		Status(http.StatusOK).JSON().Object()
 
@@ -50,7 +50,7 @@ func TestUserAPI(t *testing.T) {
 	}
 
 	// 注册验证
-	obj := e.POST("/api/v1/user/register").
+	obj := e.POST("/controller/v1/user/register").
 		WithHeader("Content-Type", "application/json").
 		WithJSON(data).
 		Expect().
@@ -61,7 +61,7 @@ func TestUserAPI(t *testing.T) {
 	resData.Value("nickname").Equal(nickName)
 
 	// 验证错误的密码无法登陆
-	obj = e.POST("/api/v1/user/login").
+	obj = e.POST("/controller/v1/user/login").
 		WithHeader("Content-Type", "application/json").
 		WithJSON(map[string]interface{}{
 			"user_name": userName,
@@ -72,7 +72,7 @@ func TestUserAPI(t *testing.T) {
 	obj.Value("code").Equal(40001)
 
 	// 验证正确的密码无法登陆
-	obj = e.POST("/api/v1/user/login").
+	obj = e.POST("/controller/v1/user/login").
 		WithHeader("Content-Type", "application/json").
 		WithJSON(map[string]interface{}{
 			"user_name": userName,

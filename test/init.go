@@ -1,12 +1,12 @@
 package test
 
 import (
+	"ginorm/cache"
+	"ginorm/config"
+	"ginorm/model"
+	"ginorm/router"
+	"ginorm/util"
 	"os"
-	"singo/cache"
-	"singo/conf"
-	"singo/model"
-	"singo/server"
-	"singo/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -20,7 +20,7 @@ func init() {
 	// 从配置文件读取配置
 	confInit()
 	// API
-	s = server.NewRouter()
+	s = router.NewRouter()
 }
 
 // Init 初始化配置项
@@ -32,7 +32,7 @@ func confInit() {
 	util.BuildLogger(os.Getenv("LOG_LEVEL"))
 
 	// 读取翻译文件
-	if err := conf.LoadLocales("../conf/locales/zh-cn.yaml"); err != nil {
+	if err := config.LoadLocales("../config/locales/zh-cn.yaml"); err != nil {
 		util.Log().Panic("翻译文件加载失败", err)
 	}
 

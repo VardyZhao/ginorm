@@ -1,0 +1,22 @@
+app:
+  name: controller-controller
+  environment: local
+  debug: on
+  mode: debug
+server:
+  port: 19999
+log:
+  level: debug
+database:
+  - name: api-doc
+    driver: mysql
+    host: 127.0.0.1
+    port: 3306
+    dbname: api_doc
+    username: root
+    password: root
+    migrate: true
+    charset: utf8mb4
+    max_connections: 10
+    idle_connections: 3
+    connect_timeout: 10

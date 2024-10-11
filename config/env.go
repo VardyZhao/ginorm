@@ -11,7 +11,7 @@ const (
 )
 
 type Environment struct {
-	CurDir   string
+	RootDir  string
 	Separate string
 }
 
@@ -25,7 +25,7 @@ func LoadEnv() {
 	if err != nil {
 		panic(err)
 	}
-	e.CurDir = curDir
+	e.RootDir = curDir
 
 	if runtime.GOOS == Windows {
 		e.Separate = "\\"

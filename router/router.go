@@ -2,6 +2,7 @@ package router
 
 import (
 	"ginorm/controller/api"
+	"ginorm/controller/api/user"
 	"ginorm/middleware"
 	"os"
 
@@ -18,23 +19,23 @@ func NewRouter() *gin.Engine {
 	r.Use(middleware.CurrentUser())
 
 	// 路由
-	v1 := r.Group("/controller/v1")
+	v1 := r.Group("/api/v1")
 	{
 		v1.POST("ping", api.Ping)
 
 		// 用户登录
-		v1.POST("user/register", api.UserRegister)
+		v1.POST("user/register", user.Register)
 
 		// 用户登录
-		v1.POST("user/login", api.UserLogin)
+		v1.POST("user/login", user.Login)
 
 		// 需要登录保护的
 		auth := v1.Group("")
 		auth.Use(middleware.AuthRequired())
 		{
 			// User Routing
-			auth.GET("user/me", api.UserMe)
-			auth.DELETE("user/logout", api.UserLogout)
+			auth.GET("user/me", user.Profile)
+			auth.DELETE("user/logout", user.Logout)
 		}
 	}
 	return r

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"ginorm/config"
-	"ginorm/model/db"
+	"ginorm/db"
 	"ginorm/router"
 	"ginorm/util"
 	"github.com/gin-gonic/gin"
@@ -19,17 +19,18 @@ func Init() *gin.Engine {
 	// 加载环境变量
 	config.LoadEnv()
 	// 加载配置
-	config.LoadConfig(config.Env.CurDir + config.Env.Separate + "config.yaml")
+	config.LoadConfig(config.Env.RootDir + config.Env.Separate + "config.yaml")
 	// 设置gin模式
 	gin.SetMode(config.Conf.GetString("mode"))
 	// 设置日志级别
 	util.BuildLogger(config.Conf.GetString("log_level"))
 	// 读取翻译文件
-	if err := config.LoadLocales(config.Env.CurDir + config.Env.Separate + "locales" + config.Env.Separate + "zh-cn.yaml"); err != nil {
+	if err := config.LoadLocales(config.Env.RootDir + config.Env.Separate + "locales" + config.Env.Separate + "zh-cn.yaml"); err != nil {
 		util.Log().Panic("翻译文件加载失败", err)
 	}
 	// 连接数据库
-	db.LoadDB()
+	db.Load()
+	defer db.Conn.CloseAll()
 	// todo 连接redis
 
 	// 加载中间件和路由

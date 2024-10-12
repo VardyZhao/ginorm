@@ -1,8 +1,9 @@
 package middleware
 
 import (
+	"ginorm/entity/response"
+	"ginorm/errors"
 	"ginorm/model"
-	"ginorm/serializer"
 	"ginorm/service"
 
 	"github.com/gin-contrib/sessions"
@@ -35,7 +36,10 @@ func AuthRequired() gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(200, serializer.CheckLogin())
+		c.JSON(200, &response.Response{
+			Code: errors.CodeLoginInvalid,
+			Msg:  errors.MsgLoginInvalid,
+		})
 		c.Abort()
 	}
 }

@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 	"ginorm/config"
-	"ginorm/migration"
+	"ginorm/db/migration"
 	"gorm.io/gorm"
 	"log"
 	"time"

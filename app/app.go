@@ -5,6 +5,7 @@ import (
 	"errors"
 	"ginorm/config"
 	"ginorm/db"
+	"ginorm/middleware"
 	"ginorm/router"
 	"ginorm/util"
 	"github.com/gin-gonic/gin"
@@ -31,9 +32,12 @@ func Init() *gin.Engine {
 	// 连接数据库
 	db.Load()
 	// todo 连接redis
-
-	// 加载中间件和路由
-	r := router.NewRouter()
+	// 初始化gin
+	r := gin.Default()
+	// 加载中间件
+	middleware.Load(r)
+	// 加载路由
+	router.Load(r)
 	return r
 }
 

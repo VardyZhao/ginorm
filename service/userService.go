@@ -2,10 +2,11 @@ package service
 
 import (
 	"ginorm/constant"
+	"ginorm/entity/dto"
+	"ginorm/entity/request"
+	"ginorm/errors"
 	"ginorm/model"
 	"ginorm/repository"
-	"ginorm/request"
-	"ginorm/serializer"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -15,32 +16,27 @@ import (
 type UserService struct{}
 
 // Register 用户注册
-func (service *UserService) Register(registerRequest request.RegisterRequest) serializer.Response {
+func (service *UserService) Register(registerRequest request.RegisterRequest) (dto.UserDTO, *errors.BusinessError) {
 
 	repo := repository.NewUserRepository()
+	userDTO := dto.UserDTO{}
 
 	// 校验nickname唯一性
 	count, err := repo.CountUserByNickname(registerRequest.Nickname)
 	if err != nil {
-		return serializer.ParamErr("校验昵称失败", err)
+		panic(err)
 	}
 	if count > 0 {
-		return serializer.Response{
-			Code: 40001,
-			Msg:  "昵称被占用",
-		}
+		return userDTO, errors.NewBusinessError(errors.CodeUserDuplicatedNickname, errors.MsgUserDuplicatedNickname)
 	}
 
 	// 校验username唯一性
 	count, err = repo.CountUserByNickname(registerRequest.Username)
 	if err != nil {
-		return serializer.ParamErr("校验用户名失败", err)
+		panic(err)
 	}
 	if count > 0 {
-		return serializer.Response{
-			Code: 40001,
-			Msg:  "用户名已经注册",
-		}
+		return userDTO, errors.NewBusinessError(errors.CodeUserDuplicatedUsername, errors.MsgUserDuplicatedUsername)
 	}
 
 	user := model.User{
@@ -50,37 +46,35 @@ func (service *UserService) Register(registerRequest request.RegisterRequest) se
 	}
 	// 加密密码
 	if err := service.setPassword(&user, registerRequest.Password); err != nil {
-		return serializer.Err(
-			serializer.CodeEncryptError,
-			"密码加密失败",
-			err,
-		)
+		return userDTO, errors.NewBusinessError(errors.CodeEncryptError, errors.MsgEncryptError)
 	}
 
 	// 创建用户
 	if err := repo.CreateUser(&user); err != nil {
-		return serializer.ParamErr("注册失败", err)
+		panic(err)
 	}
 
-	return serializer.BuildUserResponse(user)
+	return dto.BuildUserDTO(&user), nil
 }
 
 // Login 用户登录函数
-func (service *UserService) Login(loginRequest request.LoginRequest, c *gin.Context) serializer.Response {
+func (service *UserService) Login(loginRequest request.LoginRequest, c *gin.Context) (dto.UserDTO, *errors.BusinessError) {
 	repo := repository.NewUserRepository()
+	userDTO := dto.UserDTO{}
+
 	user, err := repo.GetUserByUsername(loginRequest.Username)
 	if err != nil {
-		return serializer.ParamErr("账号或密码错误", nil)
+		return userDTO, errors.NewBusinessError(errors.CodeUserLoginFail, errors.MsgUserLoginFail)
 	}
 
 	if service.checkPassword(user, loginRequest.Password) == false {
-		return serializer.ParamErr("账号或密码错误", nil)
+		return userDTO, errors.NewBusinessError(errors.CodeUserLoginFail, errors.MsgUserLoginFail)
 	}
 
 	// 设置session
 	service.setSession(c, user)
 
-	return serializer.BuildUserResponse(user)
+	return dto.BuildUserDTO(&user), nil
 }
 
 func (service *UserService) Logout(c *gin.Context) {

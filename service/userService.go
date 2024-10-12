@@ -49,7 +49,7 @@ func (service *UserService) Register(registerRequest request.RegisterRequest) se
 		Status:   constant.UserStatusActive,
 	}
 	// 加密密码
-	if err := service.setPassword(user, registerRequest.Password); err != nil {
+	if err := service.setPassword(&user, registerRequest.Password); err != nil {
 		return serializer.Err(
 			serializer.CodeEncryptError,
 			"密码加密失败",
@@ -103,7 +103,7 @@ func (service *UserService) setSession(c *gin.Context, user model.User) {
 }
 
 // SetPassword 设置密码
-func (service *UserService) setPassword(user model.User, password string) error {
+func (service *UserService) setPassword(user *model.User, password string) error {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), constant.PasswordCost)
 	if err != nil {
 		return err

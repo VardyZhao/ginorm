@@ -19,4 +19,4 @@ database:
     charset: utf8mb4
     max_open: 10
     max_idle: 3
-    max_life: 3600
+    max_life: 600

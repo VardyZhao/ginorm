@@ -6,7 +6,6 @@ import (
 	"ginorm/serializer"
 	"ginorm/service"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,9 +46,8 @@ func Profile(c *gin.Context) {
 
 // Logout 用户登出
 func Logout(c *gin.Context) {
-	s := sessions.Default(c)
-	s.Clear()
-	s.Save()
+	userService := service.UserService{}
+	userService.Logout(c)
 	c.JSON(200, serializer.Response{
 		Code: 0,
 		Msg:  "登出成功",

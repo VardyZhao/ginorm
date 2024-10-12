@@ -32,7 +32,7 @@ type DatabaseConfig struct {
 
 func Load() {
 	var dbConfigs []DatabaseConfig
-	if err := config.Conf.UnmarshalKey("databases", &dbConfigs); err != nil {
+	if err := config.Conf.UnmarshalKey("database", &dbConfigs); err != nil {
 		log.Fatalf("Error unmarshaling databases config: %v", err)
 	}
 	Conn = &Manager{
@@ -94,13 +94,13 @@ func (m *Manager) CloseAll() {
 	for name, db := range m.connections {
 		sqlDB, err := db.DB()
 		if err != nil {
-			log.Printf("Error getting sql.DB for %s: %v", name, err)
+			log.Printf("Error getting sql.DB for [%s]: %v", name, err)
 			continue
 		}
 		if err := sqlDB.Close(); err != nil {
-			log.Printf("Error closing database %s: %v", name, err)
+			log.Printf("Error closing database [%s]: %v", name, err)
 		} else {
-			log.Printf("Closed database %s", name)
+			log.Printf("Closed database [%s]", name)
 		}
 	}
 }

@@ -45,7 +45,7 @@ func (service *UserService) Register(registerRequest request.RegisterRequest) se
 
 	user := model.User{
 		Nickname: registerRequest.Nickname,
-		UserName: registerRequest.Username,
+		Username: registerRequest.Username,
 		Status:   constant.UserStatusActive,
 	}
 	// 加密密码
@@ -65,13 +65,6 @@ func (service *UserService) Register(registerRequest request.RegisterRequest) se
 	return serializer.BuildUserResponse(user)
 }
 
-func (service *UserService) setSession(c *gin.Context, user model.User) {
-	s := sessions.Default(c)
-	s.Clear()
-	s.Set("user_id", user.ID)
-	s.Save()
-}
-
 // Login 用户登录函数
 func (service *UserService) Login(loginRequest request.LoginRequest, c *gin.Context) serializer.Response {
 	repo := repository.NewUserRepository()
@@ -88,6 +81,25 @@ func (service *UserService) Login(loginRequest request.LoginRequest, c *gin.Cont
 	service.setSession(c, user)
 
 	return serializer.BuildUserResponse(user)
+}
+
+func (service *UserService) Logout(c *gin.Context) {
+	s := sessions.Default(c)
+	s.Clear()
+	s.Save()
+}
+
+func (service *UserService) GetUser(ID interface{}) (model.User, error) {
+	repo := repository.NewUserRepository()
+	user, err := repo.GetUser(ID)
+	return user, err
+}
+
+func (service *UserService) setSession(c *gin.Context, user model.User) {
+	s := sessions.Default(c)
+	s.Clear()
+	s.Set("user_id", user.ID)
+	s.Save()
 }
 
 // SetPassword 设置密码

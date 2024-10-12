@@ -30,7 +30,6 @@ func Init() *gin.Engine {
 	}
 	// 连接数据库
 	db.Load()
-	defer db.Conn.CloseAll()
 	// todo 连接redis
 
 	// 加载中间件和路由
@@ -61,6 +60,7 @@ func Run(r *gin.Engine) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	defer db.Conn.CloseAll()
 	if shutdownErr := srv.Shutdown(ctx); shutdownErr != nil {
 		log.Fatal("Server Shutdown:", shutdownErr)
 	}

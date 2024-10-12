@@ -3,6 +3,7 @@ package middleware
 import (
 	"ginorm/model"
 	"ginorm/serializer"
+	"ginorm/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,8 @@ func CurrentUser() gin.HandlerFunc {
 		session := sessions.Default(c)
 		uid := session.Get("user_id")
 		if uid != nil {
-			user, err := model.GetUser(uid)
+			us := service.UserService{}
+			user, err := us.GetUser(uid)
 			if err == nil {
 				c.Set("user", &user)
 			}

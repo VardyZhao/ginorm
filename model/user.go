@@ -7,7 +7,7 @@ import (
 // User 用户模型
 type User struct {
 	gorm.Model
-	UserName       string
+	Username       string
 	PasswordDigest string
 	Nickname       string
 	Status         string

@@ -1,6 +1,12 @@
 package constant
 
 const (
+	// TraceId trace id字段名
+	TraceId = "trace_id"
+
+	// HeaderTraceId 传入的header头的trace id字段名
+	HeaderTraceId = "X-Trace-Id"
+
 	// PasswordCost 密码加密难度
 	PasswordCost = 12
 

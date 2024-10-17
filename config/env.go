@@ -13,6 +13,7 @@ const (
 type Environment struct {
 	RootDir  string
 	Separate string
+	Platform string
 }
 
 var Env *Environment
@@ -27,11 +28,7 @@ func LoadEnv() {
 	}
 	e.RootDir = curDir
 
-	if runtime.GOOS == Windows {
-		e.Separate = "\\"
-	} else {
-		e.Separate = "/"
-	}
+	e.Platform = runtime.GOOS
 
 	Env = &e
 }

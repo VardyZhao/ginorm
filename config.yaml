@@ -3,10 +3,15 @@ app:
   environment: local
   debug: on
   mode: debug
+  version: 1.0.0
 server:
   port: 19999
 log:
-  level: debug
+  path: storage/logs
+  max_size: 10
+  max_backups: 5
+  max_age: 30
+  compress: true
 database:
   - name: default
     driver: mysql

@@ -1,32 +1,34 @@
 package util
 
 import (
-	"math/rand"
-	"time"
+	"ginorm/config"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"log"
+	"strings"
 )
 
-// RandStringRunes 返回随机字符串
-func RandStringRunes(n int) string {
-	var letterRunes = []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-	rand.Seed(time.Now().UnixNano())
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+func GetAbsPath(relPath string) string {
+	if config.Env.Platform == config.Windows {
+		return config.Env.RootDir + strings.Replace(relPath, "\\", "/", -1)
+	} else {
+		return config.Env.RootDir + strings.Replace(relPath, "\\", "/", -1)
 	}
-	return string(b)
 }
 
-func convertToStringMap(m map[interface{}]interface{}) map[string]interface{} {
-	result := make(map[string]interface{})
-	for key, value := range m {
-		strKey := key.(string) // 假设 key 一定是字符串类型
-		switch value := value.(type) {
-		case map[interface{}]interface{}:
-			result[strKey] = convertToStringMap(value) // 递归转换嵌套的 map
-		default:
-			result[strKey] = value
-		}
+// GenerateTraceID 生成一个随机的 Trace ID
+func GenerateTraceID() string {
+	traceID, err := uuid.NewRandom()
+	if err != nil {
+		log.Fatalf("failed to generate uuid: %v", err)
 	}
-	return result
+	return traceID.String()
+}
+
+// GetTraceID 从 context 中获取 Trace ID
+func GetTraceID(c *gin.Context) string {
+	if traceID, ok := c.Value("trace_id").(string); ok {
+		return traceID
+	}
+	return "unknown"
 }

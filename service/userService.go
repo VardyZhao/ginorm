@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"ginorm/constant"
 	"ginorm/entity/dto"
 	"ginorm/entity/request"
@@ -19,6 +20,7 @@ type UserService struct{}
 func (service *UserService) Register(registerRequest request.RegisterRequest) (dto.UserDTO, *errors.BusinessError) {
 
 	repo := repository.NewUserRepository()
+	fmt.Printf("type: %t\n", repo)
 	userDTO := dto.UserDTO{}
 
 	// 校验nickname唯一性

@@ -1,8 +1,11 @@
 package logger
 
 import (
+	"fmt"
 	"ginorm/config"
+	"ginorm/constant"
 	"ginorm/util"
+	"github.com/gin-gonic/gin"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -19,16 +22,21 @@ type loggerConfig struct {
 
 var (
 	Writer       *zap.Logger
+	lc           loggerConfig
 	levelFileMap = map[zapcore.Level]string{
-		zapcore.DebugLevel:  "debug",
-		zapcore.InfoLevel:   "info",
-		zapcore.WarnLevel:   "warn",
-		zapcore.ErrorLevel:  "error",
-		zapcore.DPanicLevel: "dpanic",
-		zapcore.PanicLevel:  "panic",
-		zapcore.FatalLevel:  "fatal",
+		zapcore.InfoLevel:   "info.log",
+		zapcore.WarnLevel:   "warn.log",
+		zapcore.ErrorLevel:  "error.log",
+		zapcore.DPanicLevel: "dpanic.log",
+		zapcore.PanicLevel:  "panic.log",
+		zapcore.FatalLevel:  "fatal.log",
 	}
-	lc loggerConfig
+	LevelInfo   = zapcore.InfoLevel
+	LevelWarn   = zapcore.WarnLevel
+	LevelError  = zapcore.ErrorLevel
+	LevelDPanic = zapcore.DPanicLevel
+	LevelPanic  = zapcore.PanicLevel
+	LevelFatal  = zapcore.FatalLevel
 )
 
 // Load 初始化 Logger，将不同日志级别输出到不同文件
@@ -37,11 +45,10 @@ func Load() {
 		log.Fatalf("Error unmarshaling databases config: %v", err)
 	}
 
-	debugCore := newCore(zapcore.DebugLevel) // DEBUG 级别日志
 	infoCore := newCore(zapcore.InfoLevel)   // INFO 级别日志
 	errorCore := newCore(zapcore.ErrorLevel) // ERROR 级别日志
 
-	core := zapcore.NewTee(debugCore, infoCore, errorCore)
+	core := zapcore.NewTee(infoCore, errorCore)
 
 	// 加入自定义字段
 	fields := []zap.Field{
@@ -62,12 +69,46 @@ func NewError(err error) zap.Field {
 	return zap.Error(err)
 }
 
+func Flush() {
+	err := Writer.Sync()
+	if err != nil {
+		fmt.Println("Sync log to file err:", err)
+		return
+	}
+}
+
+func Log(level zapcore.Level, msg string, args ...interface{}) {
+	var fields []zap.Field
+	var dataMap map[string]any
+	var ctx *gin.Context
+
+	for _, arg := range args {
+		switch v := arg.(type) {
+		case map[string]any:
+			dataMap = v
+		case *gin.Context:
+			ctx = v
+		}
+	}
+
+	if dataMap != nil {
+		fields = append(fields, zap.Any("context", dataMap))
+	}
+
+	if ctx != nil {
+		// 假设GetString方法存在
+		fields = append(fields, zap.String(constant.TraceId, ctx.GetString(constant.TraceId)))
+	}
+
+	Writer.Log(level, msg, fields...)
+}
+
 func newCore(level zapcore.Level) zapcore.Core {
 	filename, ok := levelFileMap[level]
 	if !ok {
 		filename = levelFileMap[zapcore.InfoLevel]
 	}
-	filename = util.GetAbsPath(lc.Path + filename)
+	filename = util.GetAbsPath("/" + lc.Path + "/" + filename)
 	writer := zapcore.AddSync(&lumberjack.Logger{
 		Filename:   filename,
 		MaxSize:    lc.MaxSize,    // 每个日志文件最大 10MB

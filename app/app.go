@@ -10,7 +10,6 @@ import (
 	"ginorm/router"
 	"ginorm/util"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,13 +20,13 @@ func Init() *gin.Engine {
 	// 加载环境变量
 	config.LoadEnv()
 	// 加载配置
-	config.LoadConfig(util.GetAbsPath("config.yaml"))
+	config.LoadConfig(util.GetAbsPath("/config.yaml"))
 	// 设置gin模式
 	gin.SetMode(config.Conf.GetString("mode"))
 	// 加载日志组件
 	logger.Load()
 	// 读取翻译文件
-	if err := config.LoadLocales(util.GetAbsPath("locales/zh-cn.yaml")); err != nil {
+	if err := config.LoadLocales(util.GetAbsPath("/locales/zh-cn.yaml")); err != nil {
 		logger.Writer.Error("翻译文件加载失败: ", logger.NewError(err))
 	}
 	// 连接数据库
@@ -53,7 +52,7 @@ func Run(r *gin.Engine) {
 	go func() {
 		// 服务连接
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
+			logger.Writer.Error("listen: %s\n", logger.NewError(err))
 		}
 	}()
 
@@ -61,17 +60,16 @@ func Run(r *gin.Engine) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Println("Shutdown Server ...")
+	logger.Writer.Info("Shutdown Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	// 关闭所有db链接
 	defer db.Conn.CloseAll()
 	// 程序结束时，保证缓冲区里的所有内容都刷到文件
-	defer logger.Writer.Sync()
+	defer logger.Flush()
 	if shutdownErr := srv.Shutdown(ctx); shutdownErr != nil {
-		log.Fatal("Server Shutdown:", shutdownErr)
+		logger.Writer.Fatal("Server Shutdown:", logger.NewError(shutdownErr))
 	}
-	log.Println("Server exiting")
-
+	logger.Writer.Info("Server exiting")
 }

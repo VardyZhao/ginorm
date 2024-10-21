@@ -10,6 +10,7 @@ func Load(r *gin.Engine) {
 	r.Use(Logger())
 	r.Use(PanicHandler())
 	r.Use(ErrorHandler())
+	r.Use(RateLimit())
 	r.Use(Session(os.Getenv("SESSION_SECRET")))
 	r.Use(Cors())
 	r.Use(CurrentUser())

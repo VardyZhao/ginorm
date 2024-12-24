@@ -80,14 +80,14 @@ func connect(cfg DatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-// GetDB 获取指定名称的数据库连接
+// GetDB 获取指定名称的数据库连接会话
 func (m *Manager) GetDB(name string) *gorm.DB {
 	db, exists := m.connections[name]
 	if !exists {
 		log.Fatalf("database [%s] not found", name)
 		return nil
 	}
-	return db
+	return db.Session(&gorm.Session{})
 }
 
 func (m *Manager) CloseAll() {

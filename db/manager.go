@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"ginorm/config"
 	"ginorm/db/migration"
+	"ginorm/logger"
 	"gorm.io/gorm"
-	"log"
 	"time"
 )
 
@@ -33,7 +33,7 @@ type DatabaseConfig struct {
 func Load() {
 	var dbConfigs []DatabaseConfig
 	if err := config.Conf.UnmarshalKey("database", &dbConfigs); err != nil {
-		log.Fatalf("Error unmarshaling databases config: %v", err)
+		logger.Writer.Error(fmt.Sprintf("Error unmarshaling databases config: %v", err))
 	}
 	Conn = &Manager{
 		connections: make(map[string]*gorm.DB),
@@ -42,8 +42,12 @@ func Load() {
 	for _, dbConfig := range dbConfigs {
 		db, err := connect(dbConfig)
 		if err != nil {
-			log.Fatalf("Failed to connect to database %s: %v", dbConfig.Name, err)
+			logger.Writer.Error(fmt.Sprintf("Failed to connect to database %s: %v", dbConfig.Name, err))
 		}
+		// 全局scope，不想要的可以调用 Unscoped
+		db = db.Scopes(func(db *gorm.DB) *gorm.DB {
+			return db.Where("is_deleted = ?", 0)
+		})
 		Conn.connections[dbConfig.Name] = db
 		if dbConfig.Migrate {
 			migration.Run(dbConfig.Name, db)
@@ -80,11 +84,11 @@ func connect(cfg DatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-// GetDB 获取指定名称的数据库连接会话
+// GetDB 获取指定名称的数据库连接
 func (m *Manager) GetDB(name string) *gorm.DB {
 	db, exists := m.connections[name]
 	if !exists {
-		log.Fatalf("database [%s] not found", name)
+		logger.Writer.Error(fmt.Sprintf("database [%s] not found", name))
 		return nil
 	}
 	return db.Session(&gorm.Session{})
@@ -94,26 +98,26 @@ func (m *Manager) CloseAll() {
 	for name, db := range m.connections {
 		sqlDB, err := db.DB()
 		if err != nil {
-			log.Printf("Error getting sql.DB for [%s]: %v", name, err)
+			logger.Writer.Error(fmt.Sprintf("Error getting sql.DB for [%s]: %v", name, err))
 			continue
 		}
 		if err := sqlDB.Close(); err != nil {
-			log.Printf("Error closing database [%s]: %v", name, err)
+			logger.Writer.Error(fmt.Sprintf("Error closing database [%s]: %v", name, err))
 		} else {
-			log.Printf("Closed database [%s]", name)
+			logger.Writer.Info(fmt.Sprintf("Closed database [%s]", name))
 		}
 	}
 }
 
 func (m *Manager) New(cfg DatabaseConfig) {
 	if _, exists := m.connections[cfg.Name]; exists {
-		log.Fatalf("database [%s] already exists", cfg.Name)
+		logger.Writer.Error(fmt.Sprintf("database [%s] already exists", cfg.Name))
 		return
 	}
 
 	db, err := connect(cfg)
 	if err != nil {
-		log.Fatalf(err.Error())
+		logger.Writer.Error(err.Error())
 		return
 	}
 
@@ -123,18 +127,18 @@ func (m *Manager) New(cfg DatabaseConfig) {
 func (m *Manager) Close(name string) {
 	db, exists := m.connections[name]
 	if !exists {
-		log.Fatalf("database [%s] does not exist", name)
+		logger.Writer.Error(fmt.Sprintf("database [%s] does not exist", name))
 		return
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf(err.Error())
+		logger.Writer.Error(err.Error())
 		return
 	}
 
 	if err := sqlDB.Close(); err != nil {
-		log.Fatalf(err.Error())
+		logger.Writer.Error(err.Error())
 		return
 	}
 
